@@ -1,0 +1,20 @@
+metadata:
+  name: msm_bo
+  format: "Lava-Test Test Definition 1.0"
+  description: "Validates msm GEM buffer object allocation, mmap and CPU access. Runs the IGT msm_bo test against the upstream msm DRM GPU driver."
+  os:
+    - linux
+  scope:
+    - functional
+
+params:
+  IGT_BIN_PATH: "/usr/libexec/igt-gpu-tools/msm_bo"
+  IGT_TIMEOUT: "300"
+
+run:
+  steps:
+    - REPO_PATH=$PWD
+    - cd Runner/suites/Multimedia/Graphics/igt-gpu-tools/msm_bo
+    - export IGT_TIMEOUT="${IGT_TIMEOUT}"
+    - ./run.sh --bin-path "${IGT_BIN_PATH}" || true
+    - $REPO_PATH/Runner/utils/send-to-lava.sh msm_bo.res || true

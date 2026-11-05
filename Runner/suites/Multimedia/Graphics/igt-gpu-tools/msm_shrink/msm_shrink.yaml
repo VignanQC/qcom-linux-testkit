@@ -1,0 +1,20 @@
+metadata:
+  name: msm_shrink
+  format: "Lava-Test Test Definition 1.0"
+  description: "Validates msm GEM shrinker and buffer eviction under memory pressure. Runs the IGT msm_shrink test against the upstream msm DRM GPU driver."
+  os:
+    - linux
+  scope:
+    - functional
+
+params:
+  IGT_BIN_PATH: "/usr/libexec/igt-gpu-tools/msm_shrink"
+  IGT_TIMEOUT: "900"
+
+run:
+  steps:
+    - REPO_PATH=$PWD
+    - cd Runner/suites/Multimedia/Graphics/igt-gpu-tools/msm_shrink
+    - export IGT_TIMEOUT="${IGT_TIMEOUT}"
+    - ./run.sh --bin-path "${IGT_BIN_PATH}" || true
+    - $REPO_PATH/Runner/utils/send-to-lava.sh msm_shrink.res || true
