@@ -4,64 +4,72 @@
 <!-- SPDX-License-Identifier: BSD-3-Clause -->
 
 ## Overview
-Runs the IGT GPU tools `msm_submitoverhead` test. Measures msm submit ioctl overhead with varying buffer object counts.
+The msm_submitoverhead test is an IGT (Intel GPU Tools) test that measures msm submit ioctl overhead.
 
-This is a performance measurement. The result reflects whether the subtests
-ran successfully, not a performance threshold.
+## Test Description
+This test validates:
+- Submit ioctl cost with varying buffer object counts
 
 ## Prerequisites
-- `igt-gpu-tools` installed in the image. The default binary is
-  `/usr/libexec/igt-gpu-tools/msm_submitoverhead`. The test does not install packages.
-- The GPU is driven by the upstream msm DRM driver. On images using the
-  KGSL/Adreno overlay (`/dev/kgsl-3d0` present) the test reports SKIP.
-- Root access, for DRM and kernel log access.
-
-The test uses the GPU through DRM only and does not stop or restart Weston.
+- IGT GPU tools must be installed on the target device
+- The GPU must be driven by the upstream msm DRM driver
 
 ## Usage
-```sh
-cd <Path in device>/Runner
+
+### Basic Usage (Default)
+```bash
 ./run-test.sh msm_submitoverhead
-./run-test.sh msm_submitoverhead --bin-path /custom/path/msm_submitoverhead
-./run-test.sh msm_submitoverhead --subtest <subtest-name>
-./run-test.sh msm_submitoverhead --timeout 1200
+```
+The test will automatically use the binary at `/usr/libexec/igt-gpu-tools/msm_submitoverhead`
+
+### With Custom Binary Path
+```bash
+./run-test.sh msm_submitoverhead --bin-path /custom/path/to/msm_submitoverhead
 ```
 
-Direct invocation:
-```sh
+### Run a Single Subtest
+```bash
+./run-test.sh msm_submitoverhead --subtest <subtest-name>
+```
+List the available subtests with `/usr/libexec/igt-gpu-tools/msm_submitoverhead --list-subtests`.
+
+### Custom Timeout
+```bash
+./run-test.sh msm_submitoverhead --timeout <seconds>
+```
+The default timeout is 600 seconds. It can also be set with the `IGT_TIMEOUT` environment variable.
+
+### Help
+```bash
 cd Runner/suites/Multimedia/Graphics/igt-gpu-tools/msm_submitoverhead
 ./run.sh --help
 ```
 
-List the available subtests with:
-```sh
-/usr/libexec/igt-gpu-tools/msm_submitoverhead --list-subtests
-```
+## Test Results
+The test generates:
+- **Result file**: `msm_submitoverhead.res` - Contains PASS/FAIL/SKIP status
+- **Log file**: `msm_submitoverhead_log.txt` - Contains detailed test output
+- **Kernel log**: `dmesg/dmesg_new_errors.log` - msm/adreno/drm kernel errors raised during the run
 
-| Option | Default | Description |
-|---|---|---|
-| `--bin-path PATH` | `/usr/libexec/igt-gpu-tools/msm_submitoverhead` | IGT binary to run |
-| `--subtest NAME` | all subtests | Forwarded as `--run-subtest NAME` |
-| `--timeout SECS` | `IGT_TIMEOUT` or 600 | Timeout for the IGT invocation |
+## Expected Behavior
+- **PASS**: All subtests succeed or some subtests succeed with others skipped
+- **SKIP**: The binary is missing, KGSL owns the GPU, IGT exits with code 77, or all subtests are skipped
+- **FAIL**: One or more subtests fail, the test times out, the test exits with a non-zero code, or an invalid argument is given
 
-Invalid or unknown arguments, or a non-positive timeout, report FAIL before
-the test runs.
+## Common Issues
+1. **Binary Not Found**: Ensure IGT GPU tools are installed:
+   ```bash
+   ls -l /usr/libexec/igt-gpu-tools/msm_submitoverhead
+   ```
 
-## Results and logs
-Written to the test directory:
-- `msm_submitoverhead.res`: `msm_submitoverhead PASS|FAIL|SKIP`
-- `msm_submitoverhead_log.txt`: full IGT output
-- `msm_submitoverhead_stdout_<timestamp>.log`: runner output (when launched via `run-test.sh`)
-- `dmesg/dmesg_new_errors.log`: msm/adreno/drm kernel errors raised during this
-  run (errors already present before the run are excluded). Reported as
-  warnings only, they do not change the result.
-- `dmesg/dmesg_snapshot.log`, `dmesg/pre/`: kernel log after and before the run.
+2. **Test Skipped on KGSL images**: The msm_* tests need the upstream msm GPU driver. Check the GPU owner:
+   ```bash
+   ls /dev/kgsl-3d0
+   cat /sys/module/msm/parameters/skip_gpu
+   ```
 
-## Result conditions
-- **PASS**: IGT exits 0 and at least one subtest reports SUCCESS, with no
-  failing subtest. Skipped subtests are allowed.
-- **SKIP**: binary missing, GPU owned by KGSL, IGT exit code 77 (e.g. no msm GPU),
-  or all subtests skipped.
-- **FAIL**: any subtest reports FAIL, CRASH or TIMEOUT, the run exceeds the
-  timeout, IGT exits non-zero (other than 77), invalid arguments, the binary name does
-  not match the testcase name, or the run is interrupted.
+## Notes
+- Weston is not stopped, the test uses the GPU only.
+- Exit code 77 indicates a SKIP condition (standard IGT behavior)
+- Test output is parsed for per-subtest SUCCESS, FAIL and SKIP results
+- This is a performance measurement. The result reflects whether the subtests ran, not a performance threshold.

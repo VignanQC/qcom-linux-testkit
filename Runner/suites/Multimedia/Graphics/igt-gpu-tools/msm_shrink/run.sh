@@ -23,7 +23,6 @@ if [ -z "$INIT_ENV" ]; then
     exit 1
 fi
 
-# Only source once (idempotent)
 if [ -z "${__INIT_ENV_LOADED:-}" ]; then
     # shellcheck disable=SC1090
     . "$INIT_ENV"
@@ -34,6 +33,10 @@ fi
 . "$INIT_ENV"
 # shellcheck disable=SC1091
 . "$TOOLS/functestlib.sh"
+if [ -r "$TOOLS/lib_module_reload.sh" ]; then
+    # shellcheck disable=SC1090,SC1091
+    . "$TOOLS/lib_module_reload.sh"
+fi
 # shellcheck disable=SC1091
 . "$TOOLS/lib_igt.sh"
 
@@ -42,7 +45,6 @@ RES_FILE="$SCRIPT_DIR/$TESTNAME.res"
 
 test_result_init "$TESTNAME" "$RES_FILE" || exit 1
 
-# Default IGT timeout in seconds, overridable with IGT_TIMEOUT or --timeout.
 DEFAULT_TIMEOUT=900
 
 igt_msm_run_suite "$TESTNAME" "$SCRIPT_DIR" "$DEFAULT_TIMEOUT" "$@"
